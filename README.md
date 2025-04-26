@@ -60,6 +60,12 @@ If you have ideas for improvements, feel free to [open an issue](https://github.
 
 ---
 
+## Sponsor
+
+If you find this project helpful, consider supporting me:
+
+[☕ Buy Me a Coffee](https://buymeacoffee.com/animeshmanna)
+
 ## License
 
 [MIT](LICENSE)
