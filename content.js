@@ -28,6 +28,7 @@
             <path d="M12 3l8 4.5v9l-8 4.5-8-4.5v-9l8-4.5M12 5.4L6.5 8.5 12 11.6l5.5-3.1-5.5-3.1M5 15.5l6 3.4v-6.8l-6-3.4v6.8M13 18.9l6-3.4v-6.8l-6 3.4v6.8z"/>
           </svg>
         </div>
+        <span class="current-package-score">?%</span>
         <span class="badge-count">0</span>
       `;
       document.body.appendChild(popupToggle);
@@ -46,6 +47,10 @@
             </div>
             <div class="header-text">
               <h3>Package Alternatives</h3>
+              <div class="current-package-info">
+                <span class="current-package-name">${packageName}</span>
+                <span class="current-package-score-badge">?%</span>
+              </div>
             </div>
             <div class="close-button">×</div>
           </div>
@@ -109,7 +114,16 @@
     let cachedAlternatives = [];
   
     function fetchAlternatives(packageName, container, toggleButton) {
-      let badgeCount = toggleButton.querySelector('.badge-count');
+      let badgeCount = toggleButton?.querySelector('.badge-count');
+      let currentPackageScoreEl = toggleButton?.querySelector('.current-package-score');
+      let currentPackageScoreBadge = container?.querySelector('.current-package-score-badge');
+      
+      // Make sure elements exist
+      if (!toggleButton) {
+        console.error('Toggle button is null or undefined');
+        return;
+      }
+      
       if (!badgeCount) {
         console.warn('Badge count not found, creating one');
         badgeCount = document.createElement('span');
@@ -121,7 +135,28 @@
       fetch(`https://api.npms.io/v2/package/${encodeURIComponent(packageName)}`)
         .then(response => response.json())
         .then(data => {
+          // Debug the API response to see where the score is
+          console.log('Current package data:', data);
+          
+          // Make sure we're accessing the score correctly
           const packageScore = data.score?.final || 0;
+          const formattedScore = (packageScore * 100).toFixed(0);
+          const scoreClass = getScoreClass(formattedScore);
+          
+          console.log(`Current package score: ${packageScore}, formatted: ${formattedScore}`);
+          
+          // Update current package score in toggle button
+          if (currentPackageScoreEl) {
+            currentPackageScoreEl.textContent = `${formattedScore}%`;
+            currentPackageScoreEl.className = `current-package-score package-score-${scoreClass}`;
+          }
+          
+          // Update current package score badge in popup header
+          if (currentPackageScoreBadge) {
+            currentPackageScoreBadge.textContent = `${formattedScore}%`;
+            currentPackageScoreBadge.className = `current-package-score-badge package-score-${scoreClass}`;
+          }
+  
           const keywords = data.collected?.metadata?.keywords || [];
           if (keywords.length === 0) {
             renderNoSuggestions(container);
@@ -132,7 +167,7 @@
           return fetch(`https://api.npms.io/v2/search?q=${encodeURIComponent(searchKeywords)}&size=10`)
             .then(response => response.json())
             .then(searchData => {
-              console.log('Search API Response:', searchData); // Debug: Log the API response
+              console.log('Search API Response:', searchData);
               const alternatives = searchData.results
                 .filter(pkg => pkg.package.name !== packageName)
                 .sort((a, b) => b.score.final - a.score.final)
@@ -144,17 +179,23 @@
                   fetch(`https://api.npms.io/v2/package/${encodeURIComponent(alt.package.name)}`)
                     .then(response => response.json())
                     .then(pkgData => {
-                      console.log(`Package ${alt.package.name} Data:`, pkgData); // Debug: Log each package response
+                      console.log(`Package ${alt.package.name} Data:`, pkgData);
                       return {
                         ...alt,
-                        weeklyDownloads: pkgData.collected?.npm?.downloads?.[0]?.downloads || 0
+                        weeklyDownloads: pkgData.collected?.npm?.downloads?.[0]?.downloads || 
+                                        pkgData.collected?.npm?.downloads || 0
                       };
                     })
                 )
-              ).then(cachedAlternatives => {
+              ).then(enhancedAlternatives => {
+                // Update cached alternatives
+                cachedAlternatives = enhancedAlternatives;
+                
                 renderCornerSuggestions(cachedAlternatives, container);
   
-                badgeCount.textContent = cachedAlternatives.length;
+                if (badgeCount) {
+                  badgeCount.textContent = cachedAlternatives.length;
+                }
   
                 if (cachedAlternatives.length > 0 && chrome?.runtime) {
                   toggleButton.classList.add('active');
@@ -217,25 +258,21 @@
         const pkg = alt.package;
         const score = (alt.score.final * 100).toFixed(0);
         const scoreClass = getScoreClass(score);
-        const weeklyDownloads = formatDownloads(alt.weeklyDownloads);
   
         html += `
           <div class="corner-suggestion-item" style="--item-index: ${index}">
             <div class="suggestion-header">
               <div class="package-info">
                 <a href="/package/${pkg.name}" class="package-name">${pkg.name}</a>
-                <span class="package-score package-score-${scoreClass}" title="Quality Score: ${score}/100">${score}%</span>
+                <div class="package-score-container">
+                  <div class="score-progress">
+                    <div class="score-bar score-${scoreClass}" style="width: ${score}%"></div>
+                  </div>
+                  <span class="score-label">${score}%</span>
+                </div>
               </div>
             </div>
             <div class="package-description">${pkg.description || 'No description'}</div>
-            <div class="package-downloads" title="Weekly Downloads">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              <span>${weeklyDownloads} weekly</span>
-            </div>
           </div>
         `;
       });
@@ -298,4 +335,6 @@
         return 'low';
       }
     }
+
+   
 })();
