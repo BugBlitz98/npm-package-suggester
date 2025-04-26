@@ -56,7 +56,7 @@ Or load it manually:
 ## Contributing
 
 Pull requests are welcome!  
-If you have ideas for improvements, feel free to [open an issue](https://github.com/your-username/npm-package-suggester/issues).
+If you have ideas for improvements, feel free to [open an issue](https://github.com/BugBlitz98/npm-package-suggester/issues).
 
 ---
 
