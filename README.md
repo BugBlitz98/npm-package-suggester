@@ -3,7 +3,7 @@
 **npm-package-suggester** is a Chrome extension that helps developers find better alternatives to the npm packages they are browsing.  
 It analyzes the current package URL, suggests similar packages, and provides an overall score to help you make better decisions when choosing dependencies.
 
-![npm-package-suggester](your-screenshot-url-here)
+![npm-package-suggester](https://ik.imagekit.io/qsj9rwkvv/Screenshot%202025-04-26%20at%204.40.07%E2%80%AFPM.png?updatedAt=1745675865653)
 
 ---
 
