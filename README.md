@@ -70,4 +70,4 @@ If you have ideas for improvements, feel free to [open an issue](https://github.
 
 - **Website:** (coming soon)  
 - **Chrome Web Store:** (coming soon)  
-- **Report an Issue:** [GitHub Issues](https://github.com/your-username/npm-package-suggester/issues)
+- **Report an Issue:** [GitHub Issues](https://github.com/BugBlitz98/npm-package-suggester/issues)
